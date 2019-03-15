@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <title>PayPal JavaScript SDK Sample - PayPal Checkout</title>
+</head>
+<body>
+  <script>
+    var CLIENT_ID = "sb", // Use this to test on Sandbox
+        currency = "USD",
+        intent = "capture",
+        commit = true,
+        vault = false,
+        components = "buttons",
+        disablefunding = "",
+        disablecard = "",
+        INTEGRATION_DATE = "2019-03-12",
+        locale = "en_US",
+        buyercountry = "US",
+        debug = false,
+        paypalscript = document.getElementById("paypal-js");
+      
+      function readForm() {
+          var dis_funding = [],
+              dis_card = [],
+              card = document.getElementById("fundingCard"),
+              credit = document.getElementById("fundingPPC"),
+              sepa = document.getElementById("fundingSepa"),
+              visa = document.getElementById("cardVisa"),
+              mc = document.getElementById("cardMC"),
+              amex = document.getElementById("cardAmex"),
+              disc = document.getElementById("cardDisc"),
+              jcb = document.getElementById("cardJCB"),
+              elo = document.getElementById("cardElo"),
+              hiper = document.getElementById("cardHiper");
+              
+          currency = document.getElementById("currency").value;
+          intent = document.getElementById("intent").value;
+          commit = document.getElementById("commit").value;
+          vault = document.getElementById("vault").value;
+          buyercountry = document.getElementById("country").value;
+          locale = document.getElementById("locale").value;
+          
+          if (card.checked)
+              dis_funding.push(card.value);
+          if (credit.checked)
+              dis_funding.push(credit.value);
+          if (sepa.checked)
+              dis_funding.push(sepa.value);
+          
+          if (visa.checked)
+              dis_card.push(visa.value);
+          if (mc.checked)
+              dis_card.push(mc.value);
+          if (amex.checked)
+              dis_card.push(amex.value);
+          if (disc.checked)
+              dis_card.push(disc.value);
+          if (jcb.checked)
+              dis_card.push(jcb.value);
+          if (elo.checked)
+              dis_card.push(elo.value);
+          if (hiper.checked)
+              dis_card.push(hiper.value);
+          
+          if (dis_funding.size == 0 && dis_card.size == 0)
+              return;
+          else {
+              disablefunding = dis_funding.join(",");
+              disablecard = dis_card.join(",");
+          }
+      }
+      
+      function loadScript() {
+          var source = "https://www.paypal.com/sdk/js?",
+              script = document.createElement("script");
+          readForm();
+          source += "client-id=" + CLIENT_ID;
+          source += "&currency=" + currency;
+          source += "&intent=" + intent;
+          source += "&commit=" + commit;
+          source += "&vault=" + vault;
+          source += "&components=" + components;
+          if (disablefunding !== "")
+            source += "&disable-funding=" + disablefunding;
+          if (disablecard !== "")
+            source += "&disable-card=" + disablecard;
+          source += "&integration-date=" + INTEGRATION_DATE;
+          source += "&locale=" + locale;
+          source += "&buyer-country=" + buyercountry;
+          source += "&debug=" + debug;
+          script.src = source;
+          script.onload = OnceLoaded;
+          document.getElementsByTagName("head")[0].appendChild(script);
+      }
+      function OnceLoaded() {
+  paypal.Buttons({
+    createOrder: function(data, actions) {
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: '0.01'
+          }
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        alert('Transaction completed by ' + details.payer.name.given_name);
+        // Call your server to save the transaction
+        return fetch('/paypal-transaction-complete', {
+          method: 'post',
+          body: JSON.stringify({
+            orderID: data.orderID
+          })
+        });
+      });
+    }
+  }).render('#paypal-button-container');
+      }
+  </script>
+  <div class="container">
+      <div class="row">
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1"><a href="https://developer.paypal.com/docs/checkout/reference/customize-sdk/#currency" target="_blank">Currency</a></span>
+                </div>
+                <input type="text" class="form-control" id="currency" placeholder="USD" value="USD" aria-describedby="Currency" maxlength="3">
+            </div>
+          </div>
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon2"><a href="https://developer.paypal.com/docs/checkout/reference/customize-sdk/#buyer-country" target="_blank">Country</a></span>
+                </div>
+                <input type="text" class="form-control" id="country" placeholder="US" value="US" aria-describedby="Country" maxlength="2">
+            </div>
+          </div>
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon6"><a href="https://developer.paypal.com/docs/checkout/reference/customize-sdk/#locale" target="_blank">Locale</a></span>
+                </div>
+                <input type="text" class="form-control" id="locale" placeholder="en_US" value="en_US" aria-describedby="Locale" maxlength="5">
+            </div>
+          </div>
+      </div>
+      <div class="row">
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon3">Intent</span>
+                </div>
+                <select class="form-control" id="intent">
+                    <option value="capture">Instant Capture</option>
+                    <option value="authorize">Authorize Only</option>
+                    <option value="order">(Legacy) Order</option>
+                </select>
+            </div>
+          </div>
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon4">Commit Flow</span>
+                </div>
+                <select class="form-control" id="commit">
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            </div>
+          </div>
+          <div class="col-sm">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon5">Vault</span>
+                </div>
+                <select class="form-control" id="vault">
+                    <option value="false">False</option>
+                    <option value="true">True</option>
+                </select>
+            </div>
+          </div>
+      </div>
+    <div class="form-group w-50">
+        <span class="input-group-text">Disable Funding Source:</span>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="fundingCard" value="card">
+            <label class="form-check-label" for="fundingCard">Credit or Debit Card</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="fundingPPC" value="credit">
+            <label class="form-check-label" for="fundingPPC">PayPal Credit</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="fundingSepa" value="sepa">
+            <label class="form-check-label" for="fundingSepa">SEPA-Lastschrift</label>
+        </div>
+    </div>
+          
+    <div class="form-group w-50">
+        <span class="input-group-text">Disable Credit Cards:</span>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardVisa" value="visa">
+            <label class="form-check-label" for="cardVisa">Visa</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardMC" value="mastercard">
+            <label class="form-check-label" for="cardMC">MasterCard</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardAmex" value="amex">
+            <label class="form-check-label" for="cardAmex">American Express</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardDisc" value="discover">
+            <label class="form-check-label" for="cardDisc">Discover</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardJCB" value="jcb">
+            <label class="form-check-label" for="cardJCB">JCB</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardElo" value="elo">
+            <label class="form-check-label" for="cardElo">Elo</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="cardHiper" value="hiper">
+            <label class="form-check-label" for="cardHiper">Hiper</label>
+        </div>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="loadScript()">Generate Button</button>
+  </div>
+  <br>
+  <div id="paypal-button-container"></div>
+  
+</body>
