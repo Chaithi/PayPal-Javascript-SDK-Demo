@@ -79,6 +79,7 @@
       function loadScript() {
           var source = "https://www.paypal.com/sdk/js?",
               script = document.createElement("script");
+          document.getElementById("paypal-button-container").innerHTML = ""; 
           readForm();
           source += "client-id=" + CLIENT_ID;
           source += "&currency=" + currency;
